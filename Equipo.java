@@ -1,8 +1,8 @@
 
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 
 public class Equipo
 {
@@ -79,7 +79,7 @@ public class Equipo
          ##00###0#####0##00##
          ########0000000#####
      */
-
+/*
     public String rutaOptimaVolante( char [][] matrizVolante){
         int i=0 ,j=0;
         int x=0 ,y=0;
@@ -116,11 +116,34 @@ public class Equipo
 
         return "No es posible encontrar un camino optimo";
     }
+*/
+    public String rutaOptimaVolante(char[][] matrizVolante) {
+        if (matrizVolante.length == 0 || matrizVolante[0].length == 0) {
+            return "No es posible encontrar un camino optimo";
+        }
 
-    private String rutaOptimaVolante( char [][] matrizVolante, int i, int j, int x, int y, ){
-        String ruta = "";
-        if((matrizVolante[y][x] != '#') && (x < matrizVolante[0].length) && (y < matrizVolante.length)  && (x >= 0) && (y >= 0)){
-             return ruta = rutaOptimaVolante(matrizVolante, i, j, x+1, y);
+        ArrayList<String> rutas = new ArrayList<>();
+        for (int i = 0; i < matrizVolante.length; i++) {
+            if (matrizVolante[i][0] != '#') {
+                String rutaOptima = rutaOptimaVolante(matrizVolante, i, 0, 0, i);
+                if (rutaOptima != null) {
+                    rutas.add(rutaOptima);
+                }
+            }
+        }
+
+        if (rutas.isEmpty()) {
+            return "No es posible encontrar un camino optimo";
+        } else {
+            return Collections.min(rutas, Comparator.comparing(String::length));
+        }
+    }
+
+
+    private  String rutaOptimaVolante( char [][] matrizVolante, int i, int j, int x, int y ,int minimoValorRuta){
+        String ruta = "";.0
+        if((matrizVolante[y][x] != '#') && (x < matrizVolante[0].length)   && (x >= 0) && (y >= 0)){
+             return ruta = rutaOptimaVolante(matrizVolante, i, j, x+1, y);.
         }else if(j==0){
             ruta = rutaOptimaVolante(matrizVolante, i, j+1, x, y+1);
 
@@ -128,6 +151,8 @@ public class Equipo
             ruta = rutaOptimaVolante(matrizVolante, i, j+1, x, y-2);
         }else if(j==2){
             ruta = rutaOptimaVolante(matrizVolante, i, 0, x-1, y+1);
+        }else{
+
         }
 
         return ruta;

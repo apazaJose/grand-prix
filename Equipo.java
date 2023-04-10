@@ -3,9 +3,11 @@
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 public class Equipo
 {
+    private boolean caminoCont = false;
     private ArrayList<Neumatico>neumaticos;
     
     public Equipo(){
@@ -122,10 +124,12 @@ public class Equipo
             return "No es posible encontrar un camino optimo";
         }
 
-        ArrayList<String> rutas = new ArrayList<>();
+        List<List<String>> rutas = new ArrayList<>();
+
         for (int i = 0; i < matrizVolante.length; i++) {
             if (matrizVolante[i][0] != '#') {
-                String rutaOptima = rutaOptimaVolante(matrizVolante, i, 0, 0, i);
+                List<String> rutaOptima = rutaOpt(matrizVolante, 0, i,
+                        new ArrayList<>(), new boolean[matrizVolante.length][matrizVolante[0].length]);
                 if (rutaOptima != null) {
                     rutas.add(rutaOptima);
                 }
@@ -135,27 +139,113 @@ public class Equipo
         if (rutas.isEmpty()) {
             return "No es posible encontrar un camino optimo";
         } else {
-            return Collections.min(rutas, Comparator.comparing(String::length));
+            // Inicializa el menor valor con el primer elemento de la primera lista.
+            int menor = rutas.get(0).size();
+            List<String> listaMenor = rutas.get(0);
+            // Itera sobre la lista de listas y sus elementos para encontrar el menor valor.
+            for (List<String> lista : rutas) {
+                if(lista.size()< menor){
+                    menor = lista.size();
+                    listaMenor =lista;
+                }
+            }
+            return listaMenor.toString();
         }
     }
 
 
-    private  String rutaOptimaVolante( char [][] matrizVolante, int i, int j, int x, int y ,int minimoValorRuta){
-        String ruta = "";.0
-        if((matrizVolante[y][x] != '#') && (x < matrizVolante[0].length)   && (x >= 0) && (y >= 0)){
-             return ruta = rutaOptimaVolante(matrizVolante, i, j, x+1, y);.
-        }else if(j==0){
-            ruta = rutaOptimaVolante(matrizVolante, i, j+1, x, y+1);
+    private  List<String> ruta(char [][] matrizVolante, int x, int y, boolean min, boolean auxmin,
+                         List<String> camino, List<String> caminoAlt, boolean [][] mVisitados){
+        List<String> caminoOrg;
+        if(caminoCont){
+            //Iterar los caminos alternos
+            if(x<0){
+                return null;
+            }else if (x==matrizVolante[0].length){
+                if(caminoAlt.size() <= camino.size()){
+                    camino = caminoAlt;
+                    return camino;
+                }else{
+                    return camino;
+                }
+            }else if(!(y<0 || y>= matrizVolante.length) && !esMovNoValido(matrizVolante, x, y, mVisitados)){
+                mVisitados[y][x] = true;
+                caminoAlt.add("("+y+","+x+")");
+                caminoOrg = ruta(matrizVolante, x+1, y, false, false, camino, caminoAlt, mVisitados);
+                caminoOrg = ruta(matrizVolante, x, y+1, false, false, camino, caminoAlt, mVisitados);
+                caminoOrg = ruta(matrizVolante, x, y-1, false, false, camino, caminoAlt, mVisitados);
+                caminoOrg = ruta(matrizVolante, x-1, y, true, true, camino, caminoAlt, mVisitados);
 
-        }else if(j==1){
-            ruta = rutaOptimaVolante(matrizVolante, i, j+1, x, y-2);
-        }else if(j==2){
-            ruta = rutaOptimaVolante(matrizVolante, i, 0, x-1, y+1);
+            } else if (auxmin) {
+                caminoAlt.remove(caminoAlt.size()-1);
+                return caminoAlt;
+            }
+
+            return caminoAlt;
         }else{
+            //Tenemos que encontrar el camino original para iterar con alternos
+            if (x < 0) {
+                return null;
+            } else if (x==matrizVolante[0].length) {
+                //Terminamos el primer camino
+                caminoCont=true;
+                return camino;
+            } else if (!esMovNoValido(matrizVolante,x,y,mVisitados)) {
+                mVisitados[y][x] = true;
+                camino.add("("+y+","+x+")");  // (0,0)
+                caminoAlt=camino;
 
+                caminoOrg = ruta(matrizVolante, x+1, y, false, false, camino, caminoAlt, mVisitados);
+                caminoOrg = ruta(matrizVolante, x, y+1, false, false, camino, caminoAlt, mVisitados);
+                caminoOrg = ruta(matrizVolante, x, y-1, false, false, camino, caminoAlt, mVisitados);
+                caminoOrg = ruta(matrizVolante, x-1, y, true, true, camino, caminoAlt, mVisitados);
+
+            }else if (min){
+                camino.remove(camino.size()-1);
+                return camino;
+            }
+            return camino;
         }
 
-        return ruta;
 
+
+    }
+
+    private boolean esMovNoValido(char[][] matrizVolante, int x, int y, boolean[][] mVisitados) {
+        return   y < 0 || y >= matrizVolante.length || matrizVolante[y][x] == '#' || mVisitados[y][x];
+    }
+
+    private List<String> rutaOpt(char[][] matrizVolante, int x, int y, List<String> camino, boolean[][] mVisitados) {
+        if (x < 0 || y < 0 || y >= matrizVolante.length || x >= matrizVolante[0].length || matrizVolante[y][x] == '#' || mVisitados[y][x]) {
+            return null;
+        }
+
+        if (x == matrizVolante[0].length - 1) {
+            camino.add("(" + y + "," + x + ")");
+            return camino;
+        }
+
+        mVisitados[y][x] = true;
+        camino.add("(" + y + "," + x + ")");
+
+        List<String> copiaCamino = new ArrayList<>(camino);
+
+        // Explorar las 4 direcciones posibles
+        List<String> rutaDerecha = rutaOpt(matrizVolante, x + 1, y, copiaCamino, mVisitados);
+        List<String> rutaAbajo = rutaOpt(matrizVolante, x, y + 1, copiaCamino, mVisitados);
+        List<String> rutaArriba = rutaOpt(matrizVolante, x, y - 1, copiaCamino, mVisitados);
+
+        mVisitados[y][x] = false;
+
+        // Seleccionar la ruta más corta
+        List<String> rutaCorta = rutaDerecha;
+        if (rutaCorta == null || (rutaAbajo != null && rutaAbajo.size() < rutaCorta.size())) {
+            rutaCorta = rutaAbajo;
+        }
+        if (rutaCorta == null || (rutaArriba != null && rutaArriba.size() < rutaCorta.size())) {
+            rutaCorta = rutaArriba;
+        }
+
+        return rutaCorta;
     }
 }
